@@ -1,0 +1,9 @@
+{
+  "app": {
+    "ip": "localhost",
+    "port": "8080"
+  },
+  "display": {
+    "name": "Git On With It!!"
+  }
+}
