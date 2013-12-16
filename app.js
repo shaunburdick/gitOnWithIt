@@ -10,6 +10,7 @@ var express = require('express')
   , fs = require('fs')
   , etc = require('etc')
   , path = require('path')
+  , Log = require('log')
 
 /**
  * Paths
@@ -41,6 +42,25 @@ if(fs.existsSync(paths.user_config)) {
 }
 conf_reader.add(require(paths.default_config));
 var config = conf_reader.toJSON();
+
+/**
+ * Setup Logging
+ */
+var logStream = null;
+if(config.log.file.length) {
+  logStream = fs.createWriteStream(config.log.file, { 
+    flags: 'w+', 
+    encoding: null, 
+    mode: 0666 
+  });
+  
+  logStream.addListener('error', function(e) { 
+    console.log("Unable to write log to %s (%s)", config.log.file, e.message);
+    process.exit(1);
+  });
+}
+log = new Log(config.log.level, logStream);
+log.info("Started logging");
 
 /**
  * Build app, setup express
@@ -75,5 +95,5 @@ app.get('/', function(req, res) {
  * Start app
  */
 server.listen(config.app.port, config.app.ip);
-console.log("Started %s, listening on %s:%d...",
+log.info("Started %s, listening on %s:%d...",
               config.display.name, config.app.ip, config.app.port);

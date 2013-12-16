@@ -5,5 +5,9 @@
   },
   "display": {
     "name": "Git On With It!!"
+  },
+  "log": {
+    "level": "info",
+    "file": ""
   }
 }
