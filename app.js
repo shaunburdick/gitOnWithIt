@@ -3,6 +3,8 @@
  */
 
 var express = require('express')
+  , http = require('http')
+  , socket_io = require('socket_io')
   , stylus = require('stylus')
   , nib = require('nib')
   , fs = require('fs')
@@ -44,6 +46,9 @@ var config = conf_reader.toJSON();
  * Build app, setup express
  */
 var app = express()
+  , server = http.createServer(app)
+  , io = socket_io.listen(server);
+
 app.set('views', paths.views)
 app.set('view engine', 'jade')
 app.use(express.static(paths.public))
@@ -69,6 +74,6 @@ app.get('/', function(req, res) {
 /**
  * Start app
  */
-app.listen(config.app.port, config.app.ip);
+server.listen(config.app.port, config.app.ip);
 console.log("Started %s, listening on %s:%d...",
               config.display.name, config.app.ip, config.app.port);
