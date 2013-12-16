@@ -4,7 +4,7 @@
 
 var express = require('express')
   , http = require('http')
-  , socket_io = require('socket_io')
+  , socket_io = require('socket.io')
   , stylus = require('stylus')
   , nib = require('nib')
   , fs = require('fs')
