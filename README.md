@@ -35,35 +35,4 @@ To install and use:
 API End Points
 --------------
 
-- **/meeting**
-  - *GET* Returns a list of active meetings
-  - *POST* Creates a new meeting
-
-- **/meeting/{name}**
-  - *GET* Returns meta-data about a meeting
-  - *POST* Modifies a meeting
-  - *DELETE* Deletes a meeting
-
-- **/meeting/{name}/join**
-  - *POST* Join the meeting
-
-- **/meeting/{name}/leave**
-  - *POST* Leave a meeting
-
-- **/meeting/{name}/members**
-  - *GET* Returns a list of memebers
-  - *POST* Add a member
-
-- **/meeting/{name}/members/{uid}**
-  - *GET* Returns meta-data about member
-  - *POST* Modifies meta-data about member
-  - *DELETE* Deletes a member
-
-- **/meeting/{name}/start**
-  - *POST* Start the meeting
-
-- **/meeting/{name}/next**
-  - *POST* Move to next random user
-
-- **/meeting/{name}/end**
-  - *POST* End the meeting
+See API.raml

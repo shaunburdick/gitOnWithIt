@@ -1,0 +1,303 @@
+#%RAML 0.8
+title: Git On With It!!
+baseUri: http://localhost/
+version: v1
+traits:
+  - idRequired:
+      queryParameters:
+        connectionID:
+          description: The unique identifier for the connection/user
+          type: string
+          example: 1234-abcd
+          required: true
+      responses:
+        401:
+          description: Not Authorized if no connectionID is return or it is not valid
+  - returnMeeting:
+      description: Returns meta-data about meeting
+      responses:
+        200:
+          body:
+            application/json:
+              example: |
+                {
+                 "id":     "string",
+                 "name":   "string",
+                 "title":  "string",
+                 "desc":   "string",
+                 "secure": "boolean",
+                 "owner":  "string connectionID",
+                 "admins": [ "string connectionID", "string connectionID", ... ]
+                }
+  - returnMember:
+      description: Returns meta-data about a member
+      responses:
+        200:
+          body:
+            application/json:
+              example: |
+                {
+                  "id":             "string (memberID)",
+                  "connectionID":   "string (id of parent connection)",
+                  "name":           "string (display name)",
+                  "img":            "string (path to icon/image)",
+                  "props":          { "prop1": "val", ... }
+                }
+  - mustBeJoined:
+      responses:
+        403:
+          description: User(connectionID) is not allowed, must be joined to meeting
+/register:
+  description: Registers browser with the server.
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              {
+                "connectionID": "1234-abcd"
+              }
+/meeting:
+  is: [ idRequired ]
+  get:
+    description: Returns a list of active meetings
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              [
+                {
+                   "id":     "string",
+                   "name":   "string",
+                   "title":  "string",
+                   "desc":   "string",
+                   "secure": "boolean",
+                   "owner":  "string connectionID",
+                   "admins": [ "string connectionID", "string connectionID", ... ]
+                }, 
+              ]
+  post:
+    description: Create a new meeting
+    queryParameters:
+      name:
+        description: The shortname for the meeting, used as URL slug
+        type: string
+        required: true
+      title:
+        description: The title of the meeting
+        type: string
+        required: true
+      desc:
+        description: A short description of the meeting
+        type: string
+        required: true
+      secure:
+        description: Flag to denote meeting requires password
+        type: boolean
+        required: true
+      password:
+        description: The password for a secured meeting
+        type: string
+    responses:
+      200:
+        description: Returns the result of the attempt.  If "success" is false, errors are in the "errors" member
+        body:
+          application/json:
+            example: |
+              {
+                "success": "boolean",
+                "errors": [ ],
+                "meeting": {
+                   "id":     "string",
+                   "name":   "string",
+                   "title":  "string",
+                   "desc":   "string",
+                   "secure": "boolean",
+                   "owner":  "string connectionID",
+                   "admins": [ "string connectionID", "string connectionID", ... ]
+                }
+              }
+  /{name}:
+    is: [ idRequired, returnMeeting ]
+    get:
+      description: Returns meta-data about a meeting, or empty object if not found
+    post:
+      description: Modifies a meeting, must be the owner
+      queryParameters:
+        title:
+          description: The title of the meeting
+          type: string
+        desc:
+          description: A short description of the meeting
+          type: string
+        secure:
+          description: Flag to denote meeting requires password
+          type: boolean
+        password:
+          description: The password for a secured meeting
+          type: string
+      responses:
+        403:
+          description: User(connectionID) is not allowed
+    delete:
+      description: Deletes a meeting, must be the owner
+      responses:
+        200:
+          description: Delete went ok
+        403:
+          description: User(connectionID) is not allowed
+    /join:
+      is: [ idRequired, returnMeeting ]
+      post:
+        description: Attempt to joint a meeting
+        queryParameters:
+          password:
+            description: The password for a secured meeting
+            type: string
+        responses:
+          401:
+            description: Invalid or missing password
+    /leave:
+      is: [ idRequired, mustBeJoined ]
+      get:
+        description: Single you are leaving the meeting
+        responses:
+          200:
+            description: You and all your members have been removed from the meeting
+    /status:
+      is: [ idRequired, mustBeJoined ]
+      get:
+        description: Return the current status of a meeting
+        responses:
+          200:
+            body:
+              application/json:
+                example: |
+                  {
+                    "status":       "string (pending, started, paused, ended)",
+                    "late":         [ "memberID", "memberID", ... ],
+                    "current":      "memberID",
+                    "currentTime":  "integer (seconds left)",
+                    "queue":        [ "memberID", "memberID", ... ],
+                    "finished":     [ "memberID", "memberID", ... ]
+                  }
+    /start:
+      is: [ idRequired ]
+      get:
+        description: Start the meeting, must be owner or listed admin
+        responses:
+          200:
+            description: Meeting has been started
+          403:
+            description: User(connectionID) is not allowed 
+    /pause: 
+      is: [ idRequired ]
+      get:
+        description: Pause the meeting, must be owner or listed admin
+        responses:
+          200:
+            description: Meeting has been paused
+          403:
+            description: User(connectionID) is not allowed 
+    /resume: 
+      is: [ idRequired ]
+      get:
+        description: Resume the meeting, must be owner or listed admin
+        responses:
+          200:
+            description: Meeting has been resumed
+          403:
+            description: User(connectionID) is not allowed
+    /next:
+      is: [ idRequired ]
+      get:
+        description: Move to the next person, must be current member, owner or listed admin
+        responses:
+          200:
+            description: Meeting has been resumed
+          403:
+            description: User(connectionID) is not allowed
+    /end: 
+      is: [ idRequired ]
+      get:
+        description: End the meeting, must be owner or listed admin
+        responses:
+          200:
+            description: Meeting has been ended
+          403:
+            description: User(connectionID) is not allowed
+    /members:
+      is: [ idRequired, mustBeJoined ]
+      get:
+        description: Get a list of members, including properties like "late"
+        responses:
+          200:
+            body:
+              application/json:
+                example: |
+                  [
+                     {
+                      "id":             "string (memberID)",
+                      "connectionID":   "string (id of parent connection)",
+                      "name":           "string (display name)",
+                      "img":            "string (path to icon/image)",
+                      "props":          { "prop1": "val", ... }
+                     },
+                  ]
+      post:
+        description: Add a member to the meeting
+        queryParameters:
+          name:
+            description: The name of the member
+            type: string
+            required: true
+          img:
+            description: An icon/image to use for user
+            type: file
+        responses:
+          200:
+            description: User added successfully
+            body:
+              application/json:
+                example: |
+                  {
+                    "id":             "string (memberID)",
+                    "connectionID":   "string (id of parent connection)",
+                    "name":           "string (display name)",
+                    "img":            "string (path to icon/image)",
+                    "props":          { "prop1": "val", ... }
+                  }
+          500:
+            description: Failed to add user
+      /{memberID}:
+        is: [ idRequired, mustBeJoined ]
+        get:
+          is: [ returnMember ]
+          description: Get the meta-data about member
+        post:
+          is: [ returnMember ]
+          description: Modify meta-data about member
+          queryParameters:
+            name:
+              description: The name of the member
+              type: string
+            img:
+              description: An icon/image to use for user
+              type: file
+          responses:
+            403:
+              description: Only Owner, Admin, or connectionID can edit member
+        delete:
+          description: Removes a member from the meeting
+          responses:
+            200:
+              description: Member removed
+            403: 
+              description: Only Owner, Admin, or connectionID can remove member
+            500:
+              description: Unable to remove member
+        
+          
+          
