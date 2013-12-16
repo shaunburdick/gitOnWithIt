@@ -19,6 +19,19 @@ Once the all members have gone, the meeting is considered finish.
 This app is inspired by Agile SCRUM meetings.  The meetings are designed to be 
 short and sweet.  This app should keep them that way.
 
+Installation
+------------
+To install and use:
+
+1. Make sure you have node.js installed
+2. Clone this repository into a local folder
+  - `git clone https://github.com/shaunburdick/gitOnWithIt.git <folder>`
+3. Change directories into the cloned folder
+4. Install the dependencies
+  - `npm install`
+5. Run the application
+  - `node app`
+
 API End Points
 --------------
 
