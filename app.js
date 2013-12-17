@@ -22,6 +22,7 @@ paths.user_config = path.join(__dirname, 'config.json');
 paths.dist_config = path.join(__dirname, 'config.json-dist');
 paths.views = path.join(paths.app, 'views');
 paths.public = path.join(paths.app, 'public');
+paths.routes = path.join(paths.app, 'routes');
 paths.public_css = path.join(paths.public, 'css');
 paths.public_js = path.join(paths.public, 'js');
 paths.public_img = path.join(paths.public, 'img');
@@ -34,7 +35,6 @@ var conf_reader = etc();
 conf_reader.all();
 
 if(fs.existsSync(paths.user_config)) {
-  console.log("Using %s", paths.user_config);
   conf_reader.file(paths.user_config);
 } else {
   console.log("No user config found (%s).\nPlease copy and populate %s to %s",
@@ -69,8 +69,14 @@ var app = express()
   , server = http.createServer(app)
   , io = socket_io.listen(server);
 
+
 app.set('views', paths.views)
 app.set('view engine', 'jade')
+app.use(express.logger())
+app.use(express.bodyParser())
+app.use(express.cookieParser(config.app.cookie_secret))
+app.use(express.cookieSession({ cookie: { maxAge: 60 * 60 * 1000 }}))
+app.use(express.methodOverride())
 app.use(express.static(paths.public))
 
 app.use(stylus.middleware(
@@ -82,14 +88,32 @@ app.use(stylus.middleware(
 }))
 
 /**
+ * Error Handling
+ */
+app.use(function(err, req, res, next){
+  log.error(err.stack);
+  res.send(500, 'Sad Panda :-(');
+});
+
+/**
  * Setup routes
  */
-app.get('/', function(req, res) {
-  res.render('index', { 
-    config: JSON.stringify(config), 
-    title: config.display.name
-  })
-});
+var routes = {
+  site: require(path.join(paths.routes, 'site.js'))(config),
+  register: require(path.join(paths.routes, 'register.js')),
+  meeting: require(path.join(paths.routes, 'meeting.js')),
+};
+
+app.get('/', routes.site.index);
+
+/**
+ * Setup Sockets
+ */
+io.set('logger', log)
+io.set("log level", config.socket_io.log_level)
+io.enable('browser client minification')
+io.enable('browser client etag')
+io.enable('browser client gzip')
 
 /**
  * Start app
